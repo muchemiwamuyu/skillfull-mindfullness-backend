@@ -2,8 +2,8 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from rest_framework.decorators import api_view
 from rest_framework import generics
-from .models import ServiceCategories
-from .serializers import ServiceCategorySerializer
+from .models import ServiceCategories, Service
+from .serializers import ServiceCategorySerializer, ServiceSerializer
 
 # Create your views here.
 @api_view(['GET'])
@@ -15,4 +15,9 @@ class ServiceCategoryListView(generics.ListAPIView):
         "services__tiers"
     )
     serializer_class = ServiceCategorySerializer
+
+class ServiceDetailView(generics.ListAPIView):
+    queryset = Service.objects.all()
+    serializer_class = ServiceSerializer
+    lookup_field = "id"
 
