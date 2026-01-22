@@ -21,4 +21,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('auth/', include('urbantrends_authentication.urls')),
     path('services/', include('urbantrends_services.urls')),
+    path('dev_projects/', include('urbantrends_projects.urls')),
 ]

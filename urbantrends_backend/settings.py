@@ -41,7 +41,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'urbantrends_authentication',
     'rest_framework',
-    'urbantrends_services'
+    'urbantrends_services',
+    'urbantrends_projects',
 ]
 
 MIDDLEWARE = [

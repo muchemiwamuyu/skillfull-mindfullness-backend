@@ -10,13 +10,17 @@ from .serializers import ServiceCategorySerializer, ServiceSerializer
 def hello(request):
     return HttpResponse("Hello from urbantrends services api")
 
+class CreateServicesView(generics.CreateAPIView):
+    queryset = Service.objects.all()
+    serializer_class = ServiceSerializer
+
 class ServiceCategoryListView(generics.ListAPIView):
     queryset = ServiceCategories.objects.prefetch_related(
         "services__tiers"
     )
     serializer_class = ServiceCategorySerializer
 
-class ServiceDetailView(generics.ListAPIView):
+class ServiceDetailView(generics.RetrieveAPIView):
     queryset = Service.objects.all()
     serializer_class = ServiceSerializer
     lookup_field = "id"
