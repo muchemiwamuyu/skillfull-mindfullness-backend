@@ -11,7 +11,9 @@ filelock==3.20.1
 future==1.0.0
 gevent==25.9.1
 greenlet==3.3.0
+gunicorn==24.0.0
 idna==3.11
+packaging==26.0
 psycopg2==2.9.11
 PyJWT==2.10.1
 PySocks==1.7.1
