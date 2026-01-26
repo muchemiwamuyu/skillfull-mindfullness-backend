@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'urbantrends_services',
     'urbantrends_projects',
+    'client_projects'
 ]
 
 MIDDLEWARE = [
@@ -90,6 +91,14 @@ DATABASES = {
         default=os.getenv("DATABASE_URL")
     )
 }
+
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.sqlite3",
+#         "NAME": ":memory:",
+#     }
+# }
+
 
 
 REST_FRAMEWORK = {
