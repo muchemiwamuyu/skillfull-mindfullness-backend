@@ -30,7 +30,7 @@ SECRET_KEY = 'django-insecure-_6lfm)#@5$+wu20$4-^i_^3rqd3g_o%ennu_gw+s46eur&drhv
 DEBUG = os.getenv("DEBUG", "False") == "True"
 
 
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split(",")
+ALLOWED_HOSTS = ["api.urbantrends.dev", "127.0.0.1", "localhost"]
 
 
 
