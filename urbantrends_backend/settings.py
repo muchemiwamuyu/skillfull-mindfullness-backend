@@ -48,7 +48,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'urbantrends_services',
     'urbantrends_projects',
-    'client_projects'
+    'client_projects',
 ]
 
 MIDDLEWARE = [

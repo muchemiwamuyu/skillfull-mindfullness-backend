@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponse
-from .serializers import UserSerializers
+from .serializers import UserSerializers, UserSerializer
 from django.contrib.auth.models import User
 from rest_framework.decorators import api_view, throttle_classes
 from rest_framework.response import Response
@@ -54,9 +54,12 @@ def loginUser(request):
     
     refresh = RefreshToken.for_user(user)
 
-    # Temporary success response (JWT comes next)
+    # Serialize user data
+    user_data = UserSerializer(user).data
+
     return Response(
         {
+            "user": user_data,           # contains username and email
             "access": str(refresh.access_token),
             "refresh": str(refresh),
         },
