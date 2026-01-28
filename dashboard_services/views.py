@@ -17,7 +17,6 @@ class DashboardProjectViewSet(ModelViewSet):
         status = self.request.query_params.get("status")
         if status:
             queryset = queryset.filter(project_status=status)
-
         return queryset
 
     def perform_create(self, serializer):
