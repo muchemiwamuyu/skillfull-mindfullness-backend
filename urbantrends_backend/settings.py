@@ -27,7 +27,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-_6lfm)#@5$+wu20$4-^i_^3rqd3g_o%ennu_gw+s46eur&drhv'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DEBUG", "False") == "True
 
 
 ALLOWED_HOSTS = ["api.urbantrends.dev", "127.0.0.1", "localhost", "149.102.132.191", "www.urbantrends.dev", "urbantrends.dev"]
@@ -92,14 +92,6 @@ DATABASES = {
         default=os.getenv("DATABASE_URL")
     )
 }
-
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.sqlite3",
-#         "NAME": BASE_DIR / "db.sqlite3",  # <-- file will persist here
-#     }
-# }
-
 
 # DATABASES = {
 #     "default": {
