@@ -1,13 +1,15 @@
-from django.shortcuts import render
-from .serializers import DashboardProjectSerializer
-from .models import DashboardProject
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db.models import Count
+from django.utils import timezone
+from datetime import timedelta
 
-# Create your views here.
+from .models import DashboardProject
+from .serializers import DashboardProjectSerializer
+
+
 class DashboardProjectViewSet(ModelViewSet):
     serializer_class = DashboardProjectSerializer
     permission_classes = [IsAuthenticated]
@@ -20,6 +22,7 @@ class DashboardProjectViewSet(ModelViewSet):
         status = self.request.query_params.get("status")
         if status:
             queryset = queryset.filter(project_status=status)
+
         return queryset
 
     def perform_create(self, serializer):
@@ -28,22 +31,40 @@ class DashboardProjectViewSet(ModelViewSet):
     @action(detail=False, methods=["get"], url_path="analytics")
     def analytics(self, request):
         """
-        Returns analytics for the authenticated user's projects:
+        Project analytics:
         - total projects
-        - count by status (local / published)
+        - counts by status
+        - optional time range (?range=7d|30d)
         """
         queryset = self.get_queryset()
 
-        # Aggregate counts by status
-        status_counts = queryset.values("project_status").annotate(count=Count("id"))
+        range_filter = request.query_params.get("range")
+        if range_filter == "7d":
+            queryset = queryset.filter(
+                created_at__gte=timezone.now() - timedelta(days=7)
+            )
+        elif range_filter == "30d":
+            queryset = queryset.filter(
+                created_at__gte=timezone.now() - timedelta(days=30)
+            )
 
-        # Build a simple dict with 0 defaults for statuses not present
-        analytics_data = {"local": 0, "published": 0}
+        total = queryset.count()
+
+        status_counts = queryset.values("project_status").annotate(
+            count=Count("id")
+        )
+
+        counts = {"local": 0, "published": 0}
         for item in status_counts:
-            analytics_data[item["project_status"]] = item["count"]
+            counts[item["project_status"]] = item["count"]
+
+        percentages = {
+            "local": round((counts["local"] / total) * 100, 2) if total else 0,
+            "published": round((counts["published"] / total) * 100, 2) if total else 0,
+        }
 
         return Response({
-            "total_projects": queryset.count(),
-            "by_status": analytics_data
+            "total_projects": total,
+            "counts": counts,
+            "percentages": percentages,
         })
-
