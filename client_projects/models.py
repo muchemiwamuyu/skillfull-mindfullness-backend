@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 class ClientProject(models.Model):
     STATUS_CHOICES = [
@@ -21,9 +22,17 @@ class ClientProject(models.Model):
         db_index=True,
     )
 
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="client_projects",
+        editable=False, # optional, to prevent manual assignment
+        blank=True,
+        null=True
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.project_name} ({self.status})"
-

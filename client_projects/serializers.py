@@ -3,13 +3,23 @@ from .models import ClientProject
 import re
 
 class ClientProjectSerializer(serializers.ModelSerializer):
+    # Return the user's full name instead of ID
+    created_by = serializers.SerializerMethodField(read_only=True)
+
     class Meta:
         model = ClientProject
         fields = "__all__"
-        read_only_fields = ["id",
+        read_only_fields = [
+            "id",
             "status",
             "created_at",
-            "updated_at",]
+            "created_by",
+            "updated_at",
+        ]
+
+    def get_created_by(self, obj):
+        # Return full name of the user
+        return obj.created_by.get_full_name() or obj.created_by.username
 
     def validate_phone(self, value):
         # allows +254, spaces, hyphens — but blocks garbage
