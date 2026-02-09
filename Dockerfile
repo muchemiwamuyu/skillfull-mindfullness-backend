@@ -18,5 +18,5 @@ COPY . .
 
 EXPOSE 8000
 
-CMD ["gunicorn", "urbantrends_backend.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3", "--worker-class", "gthread", "--threads", "3", "--timeout", "120"]
+CMD ["gunicorn", "urbantrends_backend.wsgi:application", "--bind", "127.0.0.1:8000", "--workers", "3", "--worker-class", "gthread", "--threads", "3", "--timeout", "120"]
 
