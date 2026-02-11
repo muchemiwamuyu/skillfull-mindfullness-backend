@@ -26,7 +26,6 @@ ALLOWED_HOSTS = [
     "149.102.132.191",
 ]
 
-<<<<<<< HEAD
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
@@ -43,9 +42,6 @@ ALLOWED_HOSTS = ["api.urbantrends.dev", "127.0.0.1", "localhost", "149.102.132.1
 
 # Application definition
 
-=======
-# Applications
->>>>>>> 0ea94435183857f4fa2d571094f9787186e6fe93
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
