@@ -6,8 +6,8 @@ from django.db.models import Count
 from django.utils import timezone
 from datetime import timedelta
 
-from .models import DashboardProject
-from .serializers import DashboardProjectSerializer
+from .models import DashboardProject, DashboardTeams
+from .serializers import DashboardProjectSerializer, DashboardTeamsSerializer
 
 
 class DashboardProjectViewSet(ModelViewSet):
@@ -68,3 +68,20 @@ class DashboardProjectViewSet(ModelViewSet):
             "counts": counts,
             "percentages": percentages,
         })
+
+class DashboardTeamsViewSet(ModelViewSet):
+    serializer_class = DashboardTeamsSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = DashboardTeams.objects.filter(added_by = self.request.user).order_by("-created_at")
+
+        role = self.request.query_params.get("role")
+
+        if role:
+            queryset = queryset.filter(role=role)
+
+        return queryset
+    
+    def perform_create(self, serializer):
+        serializer.save(added_by=self.request.user)
