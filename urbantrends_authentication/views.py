@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponse
-from .serializers import UserSerializers, UserSerializer
+from .serializers import UserSerializers, UserSerializer, PasswordResetRequestSerializer, PasswordResetConfirmSerializer
 from django.contrib.auth.models import User
 from rest_framework.decorators import api_view, throttle_classes
 from rest_framework.response import Response
@@ -10,13 +10,16 @@ from django.contrib.auth.hashers import check_password
 from rest_framework_simplejwt.tokens import RefreshToken
 from .throttles import LoginRateThrottle
 from .utils.emails import send_email
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
 
 
 # Create your views here.
 
 def test_mail(request):
     status = send_email()
-    return HttpResponse(f"send grid response: {status}")
+    return HttpResponse(f"email response: {status}")
 
 
 def hello(request):
@@ -71,3 +74,59 @@ def loginUser(request):
         },
         status=status.HTTP_200_OK
     )
+
+@api_view(['POST'])
+def request_password_reset(request):
+    """Send password reset email with tokenized link"""
+    serializer = PasswordResetRequestSerializer(data=request.data)
+    if serializer.is_valid():
+        email = serializer.validated_data['email']
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Generate token & uid
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        token = default_token_generator.make_token(user)
+
+        # Construct reset link (example: frontend URL)
+        reset_link = f"https://urbantrends.dev/reset-password/{uid}/{token}/"
+
+        # Send email
+        email_status = send_email(
+            subject="Urbantrends Password Reset",
+            to_emails=[user.email],
+            html_content=f"<p>Click the link below to reset your password:</p>"
+                         f"<a href='{reset_link}'>Reset Password</a>"
+        )
+        return Response({"message": "Password reset email sent", "status": email_status})
+
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+def confirm_password_reset(request):
+    """Set new password using token & uid"""
+    serializer = PasswordResetConfirmSerializer(data=request.data)
+    if serializer.is_valid():
+        uid = request.data.get("uid")
+        token = serializer.validated_data["token"]
+        new_password = serializer.validated_data["new_password"]
+
+        try:
+            user_id = force_str(urlsafe_base64_decode(uid))
+            user = User.objects.get(pk=user_id)
+        except (User.DoesNotExist, ValueError, TypeError):
+            return Response({"error": "Invalid link"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not default_token_generator.check_token(user, token):
+            return Response({"error": "Invalid or expired token"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Set new password
+        user.set_password(new_password)
+        user.save()
+
+        return Response({"message": "Password has been reset successfully"})
+
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

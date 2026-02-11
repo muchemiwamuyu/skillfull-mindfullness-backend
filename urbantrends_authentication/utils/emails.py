@@ -1,22 +1,18 @@
-import os
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
-
+# utils/emails.py
+from django.core.mail import EmailMessage
 from django.conf import settings
 
-
-def send_email():
-    message = Mail(
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        to_emails="edwinwamuyu199@gmail.com",
-        subject="This is jest testing",
-        html_content="<Strong>Hello from noreply@urbantrends.dev!</strong>",
-    )
-
+def send_email(subject="Test Email", to_emails=None, html_content=None):
     try:
-        sg = SendGridAPIClient(settings.SENDGRID_API_KEY)
-        response = sg.send(message)
-        return response.status_code
+        email = EmailMessage(
+            subject=subject,
+            body=html_content or "",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=to_emails or [],
+        )
+        email.content_subtype = "html"
+        email.send(fail_silently=False)
+        return "sent"
     except Exception as e:
-        print("SendGrid error:", str(e))
-        return None
+        print("Email sending error:", str(e))
+        return str(e)
