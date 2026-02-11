@@ -14,6 +14,9 @@ from pathlib import Path
 from datetime import timedelta
 import os
 import dj_database_url
+from dotenv import load_dotenv
+load_dotenv()
+
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -112,6 +115,35 @@ DATABASES = {
 #         "NAME": ":memory:",
 #     }
 # }
+
+
+SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY", "").strip()
+
+if not SENDGRID_API_KEY:
+    raise ValueError("SENDGRID_API_KEY is not set in environment variables")
+
+DEFAULT_FROM_EMAIL = "noreply@urbantrends.dev"
+
+
+# =========================
+# EMAIL CONFIG (SENDGRID)
+# =========================
+
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+
+EMAIL_HOST = "smtp.sendgrid.net"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+
+# IMPORTANT: this must literally be the string "apikey"
+EMAIL_HOST_USER = "apikey"
+
+# This must be your real SendGrid API key from environment
+EMAIL_HOST_PASSWORD = SENDGRID_API_KEY
+
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
+
+
 
 
 

@@ -9,9 +9,15 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import check_password
 from rest_framework_simplejwt.tokens import RefreshToken
 from .throttles import LoginRateThrottle
+from .utils.emails import send_email
 
 
 # Create your views here.
+
+def test_mail(request):
+    status = send_email()
+    return HttpResponse(f"send grid response: {status}")
+
 
 def hello(request):
 
