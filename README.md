@@ -16,7 +16,6 @@ The following backend project contains API's, which are responsible for handling
 
 ## Url Structure for services
 
-
 - Public (read-only):
 
 ```GET /api/services/ → list categories with services + tiers```
