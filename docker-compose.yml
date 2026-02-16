@@ -15,21 +15,21 @@ services:
     networks:
       - urbantrends-dev
 
-  urbantrends-dev-backend:
-    build:
-    container_name: urbantrends-backend
-    command: gunicorn urbantrends_backend.wsgi:application --bind 0.0.0.0:8002
-    volumes:
-      - ./app
-    ports:
-      - "127.0.0.1:8002:8000"
-    env_file:
-      - urbantrends.env
-    depends_on:
-      - db
+urbantrends-dev-backend:
+  build: .
+  container_name: urbantrends-backend
+  command: gunicorn urbantrends_backend.wsgi:application --bind 0.0.0.0:8002
+  volumes:
+    - ./app
+  ports:
+    - "127.0.0.1:8002:8000"
+  env_file:
+    - urbantrends.env
+  depends_on:
+    - db
+  networks:
+    - urbantrends-dev
 
-    networks:
-      - urbantrends-dev
 
 volumes:
   postgres_data:
