@@ -1,100 +1,20 @@
-from rest_framework import viewsets, permissions
-from rest_framework.decorators import action
+from rest_framework import viewsets, status
 from rest_framework.response import Response
-from .models import Services, ServiceItem, ServiceTier, Order, OrderItem
-from .serializers import (
-    ServicesSerializer,
-    ServiceItemSerializer,
-    ServiceTierSerializer,
-    OrderSerializer,
-    OrderItemSerializer
-)
-from django.contrib.auth.models import User
+from rest_framework.permissions import IsAuthenticated  # or IsAdminUser for admin-only
+from .models import Services
+from .serializers import ServicesNestedSerializer
 
-
-# ---------- Services / ServiceItems / Tiers ----------
-
-class ServicesViewSet(viewsets.ReadOnlyModelViewSet):
+class ServicesViewSet(viewsets.ModelViewSet):
     """
-    List and retrieve all service categories with their services and tiers
+    ViewSet to handle creation of service categories along with
+    their items and tiers in a single POST request.
     """
-    queryset = Services.objects.prefetch_related('service_items__tiers').all()
-    serializer_class = ServicesSerializer
-    permission_classes = [permissions.AllowAny]
+    queryset = Services.objects.all()
+    serializer_class = ServicesNestedSerializer
+    permission_classes = [IsAuthenticated]  # change to IsAdminUser if needed
 
-
-class ServiceItemViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = ServiceItem.objects.prefetch_related('tiers').all()
-    serializer_class = ServiceItemSerializer
-    permission_classes = [permissions.AllowAny]
-
-
-class ServiceTierViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = ServiceTier.objects.select_related('service_item').all()
-    serializer_class = ServiceTierSerializer
-    permission_classes = [permissions.AllowAny]
-
-
-# ---------- Orders / OrderItems ----------
-
-class OrderViewSet(viewsets.ModelViewSet):
-    """
-    CRUD for orders. Nested order items are handled in the serializer.
-    """
-    serializer_class = OrderSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_queryset(self):
-        # Users can only see their own orders
-        return Order.objects.filter(customer=self.request.user).prefetch_related('items__service_item', 'items__tier')
-
-    def perform_create(self, serializer):
-        serializer.save(customer=self.request.user)
-
-
-class OrderItemViewSet(viewsets.ModelViewSet):
-    """
-    Optional: Manage order items separately (if needed)
-    """
-    serializer_class = OrderItemSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_queryset(self):
-        return OrderItem.objects.filter(order__customer=self.request.user).select_related('service_item', 'tier', 'order')
-
-
-# ---------- Admin Services CRUD ----------
-
-class AdminServicesViewSet(viewsets.ModelViewSet):
-    """
-    Admin API to CRUD service categories, service items, and tiers
-    """
-    queryset = Services.objects.prefetch_related('service_items__tiers').all()
-    serializer_class = ServicesSerializer
-    permission_classes = [permissions.IsAdminUser]  # only admins
-
-class AdminServiceItemViewSet(viewsets.ModelViewSet):
-    queryset = ServiceItem.objects.prefetch_related('tiers').all()
-    serializer_class = ServiceItemSerializer
-    permission_classes = [permissions.IsAdminUser]
-
-class AdminServiceTierViewSet(viewsets.ModelViewSet):
-    queryset = ServiceTier.objects.select_related('service_item').all()
-    serializer_class = ServiceTierSerializer
-    permission_classes = [permissions.IsAdminUser]
-
-    def get_serializer(self, *args, **kwargs):
-        if isinstance(kwargs.get('data'), list):
-            kwargs['many'] = True
-        return super().get_serializer(*args, **kwargs)
-
-
-# ---------- Admin Orders View ----------
-
-class AdminOrderViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    Admin can view all orders
-    """
-    queryset = Order.objects.prefetch_related('items__service_item', 'items__tier').all()
-    serializer_class = OrderSerializer
-    permission_classes = [permissions.IsAdminUser]  # only admins
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
