@@ -1,17 +1,21 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated  # or IsAdminUser for admin-only
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import Services
 from .serializers import ServicesNestedSerializer
 
 class ServicesViewSet(viewsets.ModelViewSet):
     """
-    ViewSet to handle creation of service categories along with
-    their items and tiers in a single POST request.
+    - Public: list, retrieve
+    - Protected: create, update, delete
     """
     queryset = Services.objects.all()
     serializer_class = ServicesNestedSerializer
-    permission_classes = [IsAuthenticated]  # change to IsAdminUser if needed
+
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return [AllowAny()]
+        return [IsAuthenticated()]
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
