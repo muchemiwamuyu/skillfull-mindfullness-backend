@@ -1,127 +1,119 @@
 from rest_framework import serializers
-from rest_framework.validators import UniqueTogetherValidator
-from .models import Services, ServiceItem, ServiceTier, Order, OrderItem
-from django.contrib.auth.models import User
+from .models import Services, ServiceItem, ServiceTier
 
-
-# ---------- Service / Tier Serializers ----------
-
-class ServiceTierSerializer(serializers.ModelSerializer):
-    service_item_id = serializers.PrimaryKeyRelatedField(
-        queryset=ServiceItem.objects.all(),
-        source="service_item",
-        write_only=True
-    )
-
-    def validate(self, attrs):
-        # DRF may not have source mapping yet, so check both keys
-        service_item = attrs.get("service_item") or attrs.get("service_item_id")  
-
-        if not service_item:
-            raise serializers.ValidationError("service_item is required.")
-
-        qs = ServiceTier.objects.filter(service_item=service_item)
-
-        # Exclude instance on update
-        if self.instance:
-            qs = qs.exclude(pk=self.instance.pk)
-
-        if qs.count() >= 3:
-            raise serializers.ValidationError(
-                "A service item can only have 3 tiers."
-            )
-
-        return attrs
+class ServiceTierNestedSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(required=False)  # for updates
 
     class Meta:
         model = ServiceTier
-        fields = ["id", "service_item_id", "tier", "price", "description"]
-        validators = [
-            UniqueTogetherValidator(
-                queryset=ServiceTier.objects.all(),
-                fields=["service_item", "tier"],
-                message="This tier already exists for this service."
-            )
-        ]
+        fields = ['id', 'tier', 'price', 'description']
 
+class ServiceTierPickSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ServiceTier
+        fields = ['id', 'tier', 'price', 'description']
 
-
-class ServiceItemSerializer(serializers.ModelSerializer):
-    tiers = ServiceTierSerializer(many=True, read_only=True)
+class ServiceItemPickSerializer(serializers.ModelSerializer):
+    tiers = ServiceTierPickSerializer(many=True, read_only=True)
 
     class Meta:
         model = ServiceItem
-        fields = ["id", "services_category", "name", "tiers"]
+        fields = ['id', 'name', 'tiers']
 
-
-class ServicesSerializer(serializers.ModelSerializer):
-    service_items = ServiceItemSerializer(many=True, read_only=True)
+class ServicesPickSerializer(serializers.ModelSerializer):
+    service_items = ServiceItemPickSerializer(many=True, read_only=True)
 
     class Meta:
         model = Services
-        fields = ["id", "category", "service_items"]
+        fields = ['id', 'category', 'service_items']
 
-
-# ---------- Order / OrderItem Serializers ----------
-
-class OrderItemSerializer(serializers.ModelSerializer):
-    service_item = ServiceItemSerializer(read_only=True)
-    tier = ServiceTierSerializer(read_only=True)
-
-    service_item_id = serializers.PrimaryKeyRelatedField(
-        queryset=ServiceItem.objects.all(),
-        source="service_item",
-        write_only=True
-    )
-    tier_id = serializers.PrimaryKeyRelatedField(
-        queryset=ServiceTier.objects.all(),
-        source="tier",
-        write_only=True
-    )
-
-    total_price = serializers.SerializerMethodField()
+class ServiceItemNestedSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(required=False)  # for updates
+    tiers = ServiceTierNestedSerializer(many=True)
 
     class Meta:
-        model = OrderItem
-        fields = [
-            "id",
-            "service_item",
-            "tier",
-            "quantity",
-            "service_item_id",
-            "tier_id",
-            "total_price",
-        ]
-
-    def get_total_price(self, obj):
-        return obj.total_price()
-
-
-class OrderSerializer(serializers.ModelSerializer):
-    items = OrderItemSerializer(many=True)
-    customer = serializers.StringRelatedField(read_only=True)
-    total_price = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Order
-        fields = [
-            "id",
-            "customer",
-            "status",
-            "created_at",
-            "updated_at",
-            "items",
-            "total_price",
-        ]
-
-    def get_total_price(self, obj):
-        return obj.total_price()
+        model = ServiceItem
+        fields = ['id', 'name', 'tiers']
 
     def create(self, validated_data):
-        items_data = validated_data.pop("items")
-        order = Order.objects.create(**validated_data)
+        tiers_data = validated_data.pop('tiers', [])
+        service_category = self.context.get('services_category')
+        item = ServiceItem.objects.create(services_category=service_category, **validated_data)
+        for tier_data in tiers_data:
+            ServiceTier.objects.create(service_item=item, **tier_data)
+        return item
+
+    def update(self, instance, validated_data):
+        # Update item name
+        instance.name = validated_data.get('name', instance.name)
+        instance.save()
+
+        tiers_data = validated_data.get('tiers', [])
+        existing_tiers = {tier.id: tier for tier in instance.tiers.all()}
+
+        for tier_data in tiers_data:
+            tier_id = tier_data.get('id', None)
+            if tier_id and tier_id in existing_tiers:
+                # Update existing tier
+                tier = existing_tiers[tier_id]
+                tier.tier = tier_data.get('tier', tier.tier)
+                tier.price = tier_data.get('price', tier.price)
+                tier.description = tier_data.get('description', tier.description)
+                tier.save()
+            else:
+                # Create new tier
+                ServiceTier.objects.create(service_item=instance, **tier_data)
+        return instance
+
+class ServicesNestedSerializer(serializers.ModelSerializer):
+    service_items = ServiceItemNestedSerializer(many=True)
+
+    class Meta:
+        model = Services
+        fields = ['id', 'category', 'service_items']
+
+    # ✅ Explicit create method for POST
+    def create(self, validated_data):
+        items_data = validated_data.pop('service_items', [])
+        service_category = Services.objects.create(**validated_data)
 
         for item_data in items_data:
-            OrderItem.objects.create(order=order, **item_data)
+            item_serializer = ServiceItemNestedSerializer(
+                data=item_data,
+                context={'services_category': service_category}
+            )
+            item_serializer.is_valid(raise_exception=True)
+            item_serializer.save()
 
-        return order
+        return service_category
+
+    # Update method for PATCH
+    def update(self, instance, validated_data):
+        # Update category
+        instance.category = validated_data.get('category', instance.category)
+        instance.save()
+
+        items_data = validated_data.get('service_items', [])
+        existing_items = {item.id: item for item in instance.service_items.all()}
+
+        for item_data in items_data:
+            item_id = item_data.get('id', None)
+            if item_id and item_id in existing_items:
+                # Update existing item
+                item_serializer = ServiceItemNestedSerializer(
+                    instance=existing_items[item_id],
+                    data=item_data,
+                    context={'services_category': instance}
+                )
+                item_serializer.is_valid(raise_exception=True)
+                item_serializer.save()
+            else:
+                # Create new item
+                item_serializer = ServiceItemNestedSerializer(
+                    data=item_data,
+                    context={'services_category': instance}
+                )
+                item_serializer.is_valid(raise_exception=True)
+                item_serializer.save()
+
+        return instance
