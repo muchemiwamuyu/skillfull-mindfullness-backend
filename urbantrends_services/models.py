@@ -34,25 +34,32 @@ class ServiceItem(models.Model):
 
 class ServiceTier(models.Model):
     service_item = models.ForeignKey(
-        ServiceItem, 
-        on_delete=models.CASCADE, 
-        related_name="tiers",
-        default=default_service_item_id
+        ServiceItem,
+        on_delete=models.CASCADE,
+        related_name="tiers"
     )
+
     TIER_CHOICES = [
         ("basic", "Basic"),
         ("standard", "Standard"),
         ("premium", "Premium"),
     ]
+
     tier = models.CharField(max_length=10, choices=TIER_CHOICES)
-    price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
     description = models.TextField(blank=True)
 
     class Meta:
-        unique_together = ('service_item', 'tier')  # each tier must be unique per service
+        constraints = [
+            models.UniqueConstraint(
+                fields=["service_item", "tier"],
+                name="unique_service_tier_per_item"
+            )
+        ]
 
     def __str__(self):
         return f"{self.service_item.name} - {self.get_tier_display()}"
+
 
 
 class Order(models.Model):
