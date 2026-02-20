@@ -14,15 +14,15 @@ class ServiceTierSerializer(serializers.ModelSerializer):
     )
 
     def validate(self, attrs):
-        # Handle both create & update
-        service_item = attrs.get(
-            "service_item",
-            getattr(self.instance, "service_item", None)
-        )
+        # DRF may not have source mapping yet, so check both keys
+        service_item = attrs.get("service_item") or attrs.get("service_item_id")  
+
+        if not service_item:
+            raise serializers.ValidationError("service_item is required.")
 
         qs = ServiceTier.objects.filter(service_item=service_item)
 
-        # Exclude current instance during updates
+        # Exclude instance on update
         if self.instance:
             qs = qs.exclude(pk=self.instance.pk)
 
@@ -35,13 +35,7 @@ class ServiceTierSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ServiceTier
-        fields = [
-            "id",
-            "service_item_id",
-            "tier",
-            "price",
-            "description",
-        ]
+        fields = ["id", "service_item_id", "tier", "price", "description"]
         validators = [
             UniqueTogetherValidator(
                 queryset=ServiceTier.objects.all(),
@@ -49,6 +43,7 @@ class ServiceTierSerializer(serializers.ModelSerializer):
                 message="This tier already exists for this service."
             )
         ]
+
 
 
 class ServiceItemSerializer(serializers.ModelSerializer):
