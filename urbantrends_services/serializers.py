@@ -72,7 +72,7 @@ class ServicesNestedSerializer(serializers.ModelSerializer):
         model = Services
         fields = ['id', 'category', 'service_items']
 
-    # ✅ Explicit create method for POST
+    # Explicit create method for POST
     def create(self, validated_data):
         items_data = validated_data.pop('service_items', [])
         service_category = Services.objects.create(**validated_data)
