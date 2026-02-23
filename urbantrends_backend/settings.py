@@ -15,12 +15,6 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Security
-<<<<<<< HEAD
-=======
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "django-insecure-default-key")
-DEBUG = os.getenv("DJANGO_DEBUG")
-
->>>>>>> 4606c8a3678bcff91bcbe98943b43a38c62b174e
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
