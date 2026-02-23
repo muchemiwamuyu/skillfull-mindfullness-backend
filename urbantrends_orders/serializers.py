@@ -12,10 +12,8 @@ class OrderCreateSerializer(serializers.Serializer):
         user = request.user if request and request.user.is_authenticated else None
 
         tier = get_object_or_404(
-            ServiceTier.objects.select_related(
-                "service_item__services_category"
-            ),
-            id=validated_data["tier_id"]
+            ServiceTier.objects.select_related("service_item__services_category"),
+            id=validated_data["tier_id"],
         )
 
         return Order.objects.create(
@@ -26,7 +24,7 @@ class OrderCreateSerializer(serializers.Serializer):
             price=tier.price,
         )
 
-
+#  Output serializer
 class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order

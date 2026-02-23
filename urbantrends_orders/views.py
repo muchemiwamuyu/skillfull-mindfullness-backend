@@ -18,6 +18,13 @@ class OrderCreateView(generics.CreateAPIView):
         context["request"] = self.request
         return context
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        order = serializer.save()
+        output_serializer = OrderSerializer(order, context=self.get_serializer_context())
+        return Response(output_serializer.data)
+
 
 class OrderListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
