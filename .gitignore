@@ -5,6 +5,7 @@ venv/
 # Environment variables
 .env
 .env.*
+urbantrends.env
 
 # Python
 __pycache__/
