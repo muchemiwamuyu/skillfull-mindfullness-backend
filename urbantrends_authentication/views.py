@@ -13,6 +13,7 @@ from .utils.emails import send_email
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
+from django.template.loader import render_to_string
 
 
 # Create your views here.
@@ -32,8 +33,14 @@ def createUser(request):
     if request.method == 'POST':
         serializer = UserSerializers(data=request.data)
         if serializer.is_valid():
-            serializer.save()
-            return Response({"user created": serializer.data}, status=status.HTTP_201_CREATED)
+            user = serializer.save()
+            html_content = render_to_string("emails/Urbantrends-dev/email.html", {"user": user})
+            email_status = send_email(
+                subject="Welcome to Urbantrends!",
+                to_emails=[user.email],
+                html_content=html_content
+            )
+            return Response({"user created": serializer.data, "email_status": email_status}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     return Response({"error": "method not allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
