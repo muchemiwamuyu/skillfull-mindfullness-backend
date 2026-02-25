@@ -146,7 +146,15 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # CORS
-CORS_ALLOW_ALL_ORIGINS = True
+# CORS_ALLOW_ALL_ORIGINS = True
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "https://urbantrends.dev",
+    "https://api.urbantrends.dev",
+    "https://www.urbantrends.dev",
+
+]
 
 # Internationalization
 LANGUAGE_CODE = "en-us"
