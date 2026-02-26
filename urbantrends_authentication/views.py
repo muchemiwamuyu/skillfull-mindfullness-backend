@@ -8,12 +8,14 @@ from rest_framework import status
 from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import check_password
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.views import APIView
 from .throttles import LoginRateThrottle
 from .utils.emails import send_email
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.template.loader import render_to_string
+from .utils.google import verify_google_token
 
 
 # Create your views here.
@@ -137,3 +139,43 @@ def confirm_password_reset(request):
         return Response({"message": "Password has been reset successfully"})
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class googleAuthView(APIView):
+    permission_classes = []
+
+
+    def post(self, request):
+        token = request.data.get("token")
+
+        if not token:
+            return Response(
+                {"error": "Token missing"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        google_data = verify_google_token(token)
+
+        if not google_data:
+            return Response(
+                {"error": "Invalid Google token"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        email = google_data["email"]
+        username = email.split("@")[0]
+
+        user, created = User.objects.get_or_create(
+            email=email,
+            defaults={"username": username}
+        )
+
+        refresh = RefreshToken.for_user(user)
+
+        return Response({
+            "access": str(refresh.access_token),
+            "refresh": str(refresh),
+            "user": {
+                "username": user.username,
+                "email": user.email
+            }
+        })
