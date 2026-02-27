@@ -152,6 +152,7 @@ AUTH_PASSWORD_VALIDATORS = [
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "https://urbantrends.dev",
+    "https://admin.urbantrends.dev",
     "https://api.urbantrends.dev",
     "https://www.urbantrends.dev",
 
