@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "urbantrends_services",
     "urbantrends_projects",
     'urbantrends_orders',
+    'urbantrends_blogs',
     "client_projects",
     "dashboard_services",
     
@@ -162,6 +163,9 @@ LANGUAGE_CODE = "en-us"
 TIME_ZONE = "Africa/Nairobi"
 USE_I18N = True
 USE_TZ = True
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 # Static files
 STATIC_URL = "static/"
