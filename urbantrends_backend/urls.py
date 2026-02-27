@@ -25,4 +25,5 @@ urlpatterns = [
     path('clients/', include('client_projects.urls')),
     path('dash/projects/', include('dashboard_services.urls')),
     path('orders/', include('urbantrends_orders.urls')),
+    path('blogs/', include('urbantrends_blogs.urls')),
 ]
