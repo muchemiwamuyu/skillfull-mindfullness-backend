@@ -27,13 +27,6 @@ ALLOWED_HOSTS = ["api.urbantrends.dev", "127.0.0.1", "localhost", "149.102.132.1
 # This is the FIX for your http vs https image issue
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
-if not DEBUG:
-    SECURE_SSL_REDIRECT = True
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
-    # Ensures Django knows it is behind a secure proxy
-    USE_X_FORWARDED_HOST = True
-    USE_X_FORWARDED_PORT = True
 
 # Application definition
 INSTALLED_APPS = [

@@ -10,23 +10,25 @@ from .serializers import BlogPostSerializer, CommentSerializer
 
 
 class IsOwnerOrReadOnly(BasePermission):
-    """
-    Only the owner of the post can edit or delete it.
-    Read permissions are allowed to any request.
-    """
     def has_object_permission(self, request, view, obj):
+        # 1. Allow any read-only request (GET, HEAD, OPTIONS)
         if request.method in permissions.SAFE_METHODS:
             return True
-        return obj.user == request.user
-
+        
+        # 2. Allow if the user is the owner OR is a superuser/staff
+        return obj.user == request.user or request.user.is_staff
 
 class BlogPostViewSet(viewsets.ModelViewSet):
     serializer_class = BlogPostSerializer
-    permission_classes = [
-        permissions.IsAuthenticatedOrReadOnly,
-        IsOwnerOrReadOnly,
-    ]
     lookup_field = "slug"
+    
+    # Use a more flexible permission approach
+    def get_permissions(self):
+        if self.action in ['create', 'like', 'comment']:
+            return [permissions.IsAuthenticated()]
+        if self.action in ['update', 'partial_update', 'destroy']:
+            return [IsOwnerOrReadOnly()]
+        return [permissions.AllowAny()]
 
     def get_queryset(self):
         queryset = (
@@ -34,61 +36,24 @@ class BlogPostViewSet(viewsets.ModelViewSet):
             .select_related("user")
             .prefetch_related("comments", "likes")
             .annotate(likes_count=Count("likes"))
+            .order_by("-created_at")
         )
 
-        if self.request.user.is_authenticated:
+        user = self.request.user
+        
+        # Staff/Admins see everything
+        if user.is_authenticated and user.is_staff:
+            return queryset
+            
+        # Authenticated users see published posts + their own drafts
+        if user.is_authenticated:
             return queryset.filter(
-                models.Q(is_published=True) |
-                models.Q(user=self.request.user)
+                models.Q(is_published=True) | models.Q(user=user)
             )
 
+        # Anonymous users only see published
         return queryset.filter(is_published=True)
 
     def perform_create(self, serializer):
+        # Ensure the user is saved as the owner
         serializer.save(user=self.request.user)
-
-    @action(
-        detail=True,
-        methods=["post"],
-        permission_classes=[permissions.IsAuthenticated],
-    )
-    def like(self, request, slug=None):
-        post = self.get_object()
-
-        like, created = Like.objects.get_or_create(
-            post=post,
-            user=request.user
-        )
-
-        if not created:
-            like.delete()
-            return Response(
-                {"detail": "Unliked"},
-                status=status.HTTP_200_OK
-            )
-
-        return Response(
-            {"detail": "Liked"},
-            status=status.HTTP_201_CREATED
-        )
-
-    @action(
-        detail=True,
-        methods=["post"],
-        permission_classes=[permissions.IsAuthenticated],
-    )
-    def comment(self, request, slug=None):
-        post = self.get_object()
-        serializer = CommentSerializer(data=request.data)
-
-        if serializer.is_valid():
-            serializer.save(user=request.user, post=post)
-            return Response(
-                serializer.data,
-                status=status.HTTP_201_CREATED
-            )
-
-        return Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST
-        )
