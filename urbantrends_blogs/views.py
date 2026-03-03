@@ -22,12 +22,14 @@ class BlogPostViewSet(viewsets.ModelViewSet):
     serializer_class = BlogPostSerializer
     lookup_field = "slug"
     
-    # Use a more flexible permission approach
     def get_permissions(self):
+        # Specific actions that require a logged-in user
         if self.action in ['create', 'like', 'comment']:
             return [permissions.IsAuthenticated()]
+        # Actions that require ownership (Update/Delete)
         if self.action in ['update', 'partial_update', 'destroy']:
             return [IsOwnerOrReadOnly()]
+        # Everything else (List/Retrieve) is public
         return [permissions.AllowAny()]
 
     def get_queryset(self):
@@ -41,19 +43,52 @@ class BlogPostViewSet(viewsets.ModelViewSet):
 
         user = self.request.user
         
-        # Staff/Admins see everything
         if user.is_authenticated and user.is_staff:
             return queryset
             
-        # Authenticated users see published posts + their own drafts
         if user.is_authenticated:
             return queryset.filter(
                 models.Q(is_published=True) | models.Q(user=user)
             )
 
-        # Anonymous users only see published
         return queryset.filter(is_published=True)
 
     def perform_create(self, serializer):
-        # Ensure the user is saved as the owner
         serializer.save(user=self.request.user)
+
+    # --- CUSTOM ACTIONS ---
+
+    @action(detail=True, methods=['post'])
+    def like(self, request, slug=None):
+        """
+        Toggles a like: If it exists, delete it. If not, create it.
+        URL: POST /api/blogs/posts/{slug}/like/
+        """
+        post = self.get_object()
+        user = request.user
+        
+        # Check if this user has already liked this specific post
+        like_qs = Like.objects.filter(user=user, post=post)
+
+        if like_qs.exists():
+            like_qs.delete()
+            return Response({"detail": "Unliked", "liked": False}, status=status.HTTP_200_OK)
+        
+        Like.objects.create(user=user, post=post)
+        return Response({"detail": "Liked", "liked": True}, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['post'])
+    def comment(self, request, slug=None):
+        """
+        Adds a comment to a specific post.
+        URL: POST /api/blogs/posts/{slug}/comment/
+        """
+        post = self.get_object()
+        serializer = CommentSerializer(data=request.data)
+        
+        if serializer.is_valid():
+            # Save the comment with the current user and the post from the URL
+            serializer.save(user=request.user, post=post)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
