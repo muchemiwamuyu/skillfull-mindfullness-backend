@@ -7,14 +7,12 @@ class ModuleSerializer(serializers.ModelSerializer):
         fields = ['id', 'name']
 
 class CreateBrandsFoundationSerializer(serializers.ModelSerializer):
-    # Use SlugRelatedField to point to the 'name' field of the Module model
     modules = serializers.SlugRelatedField(
         many=True,
         slug_field='name',
         queryset=Module.objects.all()
     )
     
-    # Optional: Keep this if you still want the ID and Name breakdown in GET requests
     modules_details = ModuleSerializer(source='modules', many=True, read_only=True)
 
     class Meta:
@@ -30,12 +28,19 @@ class CreateBrandsFoundationSerializer(serializers.ModelSerializer):
 
     def to_internal_value(self, data):
         """
-        Intercepts the incoming list of strings. 
-        If a module name doesn't exist, it creates it on the fly.
+        Fixed to handle both standard JSON and FormData (QueryDict).
         """
-        if 'modules' in data and isinstance(data['modules'], list):
-            for module_name in data['modules']:
-                # This ensures "jhdjkskjh" becomes a database record before validation
-                Module.objects.get_or_create(name=module_name)
-        
+        # 1. Extract the list correctly regardless of the request type
+        if hasattr(data, 'getlist'):
+            modules_list = data.getlist('modules')
+        else:
+            modules_list = data.get('modules', [])
+
+        # 2. Ensure each string in the list exists in the Module table
+        if isinstance(modules_list, list):
+            for name in modules_list:
+                if name:  # Avoid creating empty strings
+                    Module.objects.get_or_create(name=name)
+
+        # 3. Call super to let DRF perform the standard validation
         return super().to_internal_value(data)
