@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "urbantrends_projects",
     'urbantrends_orders',
     'urbantrends_blogs',
+    'urbantrends_brands',
     "client_projects",
     "dashboard_services",
 ]
