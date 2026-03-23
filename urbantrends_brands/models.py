@@ -11,7 +11,7 @@ class Module(models.Model):
 class CreateBrandsFoundation(models.Model):
     brand_name = models.CharField(max_length=100)
     brand_description = models.TextField()
-    image = models.ImageField(upload_to='brand_images/', null=True, blank=True)
+    image = models.ImageField(upload_to='brand_images/')
     modules = models.ManyToManyField(Module)
 
     def __str__(self):
