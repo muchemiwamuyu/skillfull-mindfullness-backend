@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "corsheaders",
     "rest_framework",
+    "django_filters",
     "urbantrends_authentication",
     "urbantrends_services",
     "urbantrends_projects",
