@@ -27,4 +27,5 @@ urlpatterns = [
     path('orders/', include('urbantrends_orders.urls')),
     path('blogs/', include('urbantrends_blogs.urls')),
     path('brands/', include('urbantrends_brands.urls')),
+    path('audit/', include('urbantrends_audit.urls')),
 ]

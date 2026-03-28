@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'urbantrends_brands',
     "client_projects",
     "dashboard_services",
+    "urbantrends_audit",
 ]
 
 MIDDLEWARE = [

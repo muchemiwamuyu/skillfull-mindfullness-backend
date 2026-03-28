@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Status Update</title>
+</head>
+<body style="background-color:#f0f1f5;margin:0;padding:0;font-family:Arial,Helvetica,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" bgcolor="#f0f1f5">
+    <tr>
+      <td>
+        <table align="center" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;background-color:#ffffff;">
+          <tr>
+            <td style="background-color:#070300;padding:24px 20px;">
+              <p style="color:#f6f5f1;font-size:29px;font-weight:700;letter-spacing:-0.04em;margin:0;">Urbantrends<br>Org</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:32px 20px;">
+              <h1 style="color:#0e1b10;font-size:24px;font-weight:700;text-align:center;letter-spacing:-0.04em;">Order Status Update</h1>
+              <p style="color:#0e1b10;font-size:15px;text-align:center;">Hi {{ user.first_name|default:user.username }}, your order status has been updated.</p>
+              <div style="background-color:#f0f1f5;border-radius:8px;padding:20px;margin:20px 0;">
+                <table width="100%" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td style="color:#5a5f6a;font-size:14px;padding:6px 0;">Order ID</td>
+                    <td style="color:#0e1b10;font-size:14px;font-weight:600;text-align:right;">#{{ order.id }}</td>
+                  </tr>
+                  <tr>
+                    <td style="color:#5a5f6a;font-size:14px;padding:6px 0;">Service</td>
+                    <td style="color:#0e1b10;font-size:14px;font-weight:600;text-align:right;">{{ order.service_name }}</td>
+                  </tr>
+                  <tr>
+                    <td style="color:#5a5f6a;font-size:14px;padding:6px 0;">New Status</td>
+                    <td style="color:#1800ad;font-size:14px;font-weight:700;text-align:right;">{{ status_display }}</td>
+                  </tr>
+                </table>
+              </div>
+              <p style="color:#0e1b10;font-size:14px;text-align:center;">If you have questions about your order, please contact our support team.</p>
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center">
+                    <a href="https://urbantrends.dev/orders" style="display:inline-block;padding:14px 32px;background-color:#1800ad;color:#ffffff;text-decoration:none;border-radius:100px;font-size:16px;font-weight:700;">View Order</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color:#070300;padding:24px 20px;">
+              <p style="color:#f6f5f1;font-size:18px;font-weight:700;margin:0 0 8px 0;">Need help?</p>
+              <p style="color:#f6f5f1;font-size:15px;margin:0 0 16px 0;">Call us at <a href="tel:0795980494" style="color:#f6f5f1;text-decoration:none;">0795980494</a> or visit our Help Center anytime.</p>
+              <p style="color:#bfc3c8;font-size:13px;margin:0;">Loresho Nairobi</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
