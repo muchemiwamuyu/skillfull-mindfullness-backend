@@ -1,13 +1,24 @@
 from rest_framework.viewsets import ModelViewSet
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework import status
 from django.db.models import Count
 from django.utils import timezone
 from datetime import timedelta
 
-from .models import DashboardProject, DashboardTeams
-from .serializers import DashboardProjectSerializer, DashboardTeamsSerializer
+from .models import DashboardProject, DashboardTeams, DashboardCustomProject
+from .serializers import (
+    DashboardProjectSerializer,
+    DashboardTeamsSerializer,
+    DashboardCustomProjectSerializer,
+    DashboardCustomProjectStatusSerializer,
+)
+from .emails import (
+    send_custom_project_confirmation,
+    send_custom_project_status_update,
+    send_new_custom_project_alert,
+)
 
 
 class DashboardProjectViewSet(ModelViewSet):
@@ -68,6 +79,47 @@ class DashboardProjectViewSet(ModelViewSet):
             "counts": counts,
             "percentages": percentages,
         })
+
+class DashboardCustomProjectViewSet(ModelViewSet):
+    permission_classes = [IsAuthenticated]
+
+    def get_serializer_class(self):
+        if self.action == "update_status":
+            return DashboardCustomProjectStatusSerializer
+        return DashboardCustomProjectSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_staff:
+            return DashboardCustomProject.objects.all()
+        return DashboardCustomProject.objects.filter(user=user)
+
+    def perform_create(self, serializer):
+        project = serializer.save(user=self.request.user)
+        send_custom_project_confirmation(project)
+        send_new_custom_project_alert(project)
+
+    @action(detail=True, methods=["patch"], url_path="update-status", permission_classes=[IsAdminUser])
+    def update_status(self, request, pk=None):
+        """Staff endpoint to update project status and optionally add admin notes."""
+        project = self.get_object()
+        serializer = DashboardCustomProjectStatusSerializer(project, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        project.refresh_from_db()
+        send_custom_project_status_update(project)
+        return Response(DashboardCustomProjectSerializer(project).data)
+
+    @action(detail=False, methods=["get"], url_path="analytics")
+    def analytics(self, request):
+        queryset = self.get_queryset()
+        total = queryset.count()
+        status_counts = {
+            item["status"]: item["count"]
+            for item in queryset.values("status").annotate(count=Count("id"))
+        }
+        return Response({"total": total, "by_status": status_counts})
+
 
 class DashboardTeamsViewSet(ModelViewSet):
     serializer_class = DashboardTeamsSerializer
