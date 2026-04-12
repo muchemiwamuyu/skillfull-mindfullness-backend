@@ -1,5 +1,5 @@
 from rest_framework.viewsets import ModelViewSet
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
@@ -123,17 +123,23 @@ class DashboardCustomProjectViewSet(ModelViewSet):
 
 class DashboardTeamsViewSet(ModelViewSet):
     serializer_class = DashboardTeamsSerializer
-    permission_classes = [IsAuthenticated]
+
+    def get_permissions(self):
+        if self.action in ("list", "retrieve"):
+            return [AllowAny()]
+        return [IsAuthenticated()]
 
     def get_queryset(self):
-        queryset = DashboardTeams.objects.filter(added_by = self.request.user).order_by("-created_at")
+        if self.action in ("list", "retrieve"):
+            queryset = DashboardTeams.objects.all().order_by("-created_at")
+        else:
+            queryset = DashboardTeams.objects.filter(added_by=self.request.user).order_by("-created_at")
 
         role = self.request.query_params.get("role")
-
         if role:
             queryset = queryset.filter(role=role)
 
         return queryset
-    
+
     def perform_create(self, serializer):
         serializer.save(added_by=self.request.user)

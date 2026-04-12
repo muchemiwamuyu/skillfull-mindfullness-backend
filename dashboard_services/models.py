@@ -141,6 +141,7 @@ class DashboardTeams(models.Model):
         choices=ROLE_CHOICES,
         default="testing"
     )
+    image = models.ImageField(upload_to="team_images/", null=True, blank=True)
     added_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='Dashboard_teams')
 
     created_at = models.DateTimeField(auto_now_add=True)
