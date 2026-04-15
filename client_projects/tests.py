@@ -60,12 +60,11 @@ class ClientProjectTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertNotIn("repo_access_token", response.data)
 
-    def test_duplicate_submission_rejected(self):
+    def test_multiple_projects_same_email_allowed(self):
         url = reverse("projects-list")
-        self.client.post(url, self._project_data(), format="json")
-        response = self.client.post(url, self._project_data(), format="json")
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.client.post(url, self._project_data(project_name="Project A"), format="json")
+        response = self.client.post(url, self._project_data(project_name="Project B"), format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_past_due_date_rejected(self):
         url = reverse("projects-list")

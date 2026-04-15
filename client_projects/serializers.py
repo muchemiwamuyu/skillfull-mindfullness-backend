@@ -70,19 +70,3 @@ class ClientProjectSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Due date cannot be in the past.")
         return value
 
-    def validate(self, attrs):
-        email = attrs.get("email")
-        project_name = attrs.get("project_name")
-
-        qs = ClientProject.objects.filter(email=email, project_name=project_name)
-
-        # On update, exclude the current instance
-        if self.instance:
-            qs = qs.exclude(pk=self.instance.pk)
-
-        if qs.exists():
-            raise serializers.ValidationError(
-                "A project with this email and project name already exists."
-            )
-
-        return attrs
