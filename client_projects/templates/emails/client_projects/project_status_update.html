@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project Status Update</title>
+</head>
+<body style="background-color:#f0f1f5;margin:0;padding:0;font-family:Arial,Helvetica,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" bgcolor="#f0f1f5">
+    <tr>
+      <td>
+        <table align="center" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;background-color:#ffffff;">
+          <tr>
+            <td style="background-color:#070300;padding:24px 20px;">
+              <p style="color:#f6f5f1;font-size:29px;font-weight:700;letter-spacing:-0.04em;margin:0;">Urbantrends<br>Org</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:32px 20px;">
+              <h1 style="color:#0e1b10;font-size:24px;font-weight:700;text-align:center;letter-spacing:-0.04em;">Project Status Update</h1>
+              <p style="color:#0e1b10;font-size:15px;text-align:center;">Hi {{ user.first_name|default:user.username }}, the status of your project has been updated.</p>
+              <div style="background-color:#f0f1f5;border-radius:8px;padding:20px;margin:20px 0;">
+                <table width="100%" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td style="color:#5a5f6a;font-size:14px;padding:6px 0;">Project ID</td>
+                    <td style="color:#0e1b10;font-size:14px;font-weight:600;text-align:right;">#{{ project.id }}</td>
+                  </tr>
+                  <tr>
+                    <td style="color:#5a5f6a;font-size:14px;padding:6px 0;">Project Name</td>
+                    <td style="color:#0e1b10;font-size:14px;font-weight:600;text-align:right;">{{ project.project_name }}</td>
+                  </tr>
+                  <tr>
+                    <td style="color:#5a5f6a;font-size:14px;padding:6px 0;">Due Date</td>
+                    <td style="color:#0e1b10;font-size:14px;font-weight:600;text-align:right;">{{ project.due_date }}</td>
+                  </tr>
+                  <tr>
+                    <td colspan="2" style="padding:8px 0;"><hr style="border:none;border-top:1px solid #bfc3c8;margin:8px 0;"></td>
+                  </tr>
+                  <tr>
+                    <td style="color:#5a5f6a;font-size:14px;padding:6px 0;">New Status</td>
+                    <td style="color:#1800ad;font-size:14px;font-weight:700;text-align:right;">{{ status_display }}</td>
+                  </tr>
+                </table>
+              </div>
+              {% if project.status == "approved" %}
+              <p style="color:#0e1b10;font-size:14px;text-align:center;">Great news! Your project has been approved. Our team will reach out to you shortly to kick things off.</p>
+              {% else %}
+              <p style="color:#0e1b10;font-size:14px;text-align:center;">Unfortunately your project was not approved at this time. Please reach out to our team if you have questions or would like to resubmit.</p>
+              {% endif %}
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center">
+                    <a href="https://urbantrends.dev/projects" style="display:inline-block;padding:14px 32px;background-color:#1800ad;color:#ffffff;text-decoration:none;border-radius:100px;font-size:16px;font-weight:700;">View Project</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color:#070300;padding:24px 20px;">
+              <p style="color:#f6f5f1;font-size:18px;font-weight:700;margin:0 0 8px 0;">Need help?</p>
+              <p style="color:#f6f5f1;font-size:15px;margin:0 0 16px 0;">Call us at <a href="tel:0795980494" style="color:#f6f5f1;text-decoration:none;">0795980494</a> or visit our Help Center anytime.</p>
+              <p style="color:#bfc3c8;font-size:13px;margin:0;">Loresho Nairobi</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
