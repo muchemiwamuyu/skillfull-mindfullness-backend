@@ -1,24 +1,57 @@
 from rest_framework.viewsets import ModelViewSet
+from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.utils import timezone
 from datetime import timedelta
 
+from client_projects.models import ClientProject
 from .models import DashboardProject, DashboardTeams, DashboardCustomProject
 from .serializers import (
     DashboardProjectSerializer,
     DashboardTeamsSerializer,
     DashboardCustomProjectSerializer,
     DashboardCustomProjectStatusSerializer,
+    StagingRepoSerializer,
 )
 from .emails import (
     send_custom_project_confirmation,
     send_custom_project_status_update,
     send_new_custom_project_alert,
 )
+
+
+class StagingReposView(ListAPIView):
+    """
+    GET /dash/staging/repos/
+    Returns all client projects that have a repo URL.
+    Staff sees all; authenticated users see only their own.
+    Supports ?scaffold_status= and ?status= filters.
+    """
+    serializer_class = StagingRepoSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        qs = ClientProject.objects.filter(
+            repo_url__isnull=False
+        ).exclude(repo_url="").select_related("created_by").order_by("-created_at")
+
+        if not (user.is_staff or user.is_superuser):
+            qs = qs.filter(created_by=user)
+
+        scaffold_status = self.request.query_params.get("scaffold_status")
+        if scaffold_status:
+            qs = qs.filter(scaffold_status=scaffold_status)
+
+        project_status = self.request.query_params.get("status")
+        if project_status:
+            qs = qs.filter(status=project_status)
+
+        return qs
 
 
 class DashboardProjectViewSet(ModelViewSet):

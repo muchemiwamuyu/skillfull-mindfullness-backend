@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import DashboardProject, DashboardTeams, DashboardCustomProject
+from client_projects.models import ClientProject
 
 
 class DashboardProjectSerializer(serializers.ModelSerializer):
@@ -38,6 +39,41 @@ class DashboardCustomProjectStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = DashboardCustomProject
         fields = ["status", "admin_notes"]
+
+
+class StagingRepoSerializer(serializers.ModelSerializer):
+    submitted_by = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = ClientProject
+        fields = [
+            "id",
+            "project_name",
+            "email",
+            "submitted_by",
+            "status",
+            "repo_url",
+            "repo_provider",
+            "repo_branch",
+            "repo_slug",
+            "scaffold_status",
+            "detected_stack",
+            "scaffold_output",
+            "scaffold_graph",
+            "scaffold_error",
+            "scaffolded_at",
+            "completeness_score",
+            "integrity_score",
+            "error_flags",
+            "suggestions",
+            "created_at",
+            "updated_at",
+        ]
+
+    def get_submitted_by(self, obj):
+        if obj.created_by is None:
+            return None
+        return obj.created_by.get_full_name() or obj.created_by.username
 
 
 class DashboardTeamsSerializer(serializers.ModelSerializer):
